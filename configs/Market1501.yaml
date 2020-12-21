@@ -1,0 +1,64 @@
+PROJECT_NAME: 'person-reid-tiny-baseline' 
+CFG_NAME: 'baseline'
+OUTPUT_DIR: './output/Market1501'
+
+DATA:
+  DATA_DIR: '/home/zhangwucong/pytorch_project/person-reid-tiny-baseline/data/Market-1501-v15.09.15'
+  INPUT_SIZE: [256,128]
+  DATALOADER_NUM_WORKERS: 8
+  SAMPLER: 'triplet'
+  BATCH_SIZE: 64
+  NUM_IMG_PER_ID: 4
+
+MODEL:
+  DEVICE_ID: ('0')
+  MODEL_NAME: 'resnet50' 
+  LAST_STRIDE: 1
+  PRETRAIN_CHOICE: 'imagenet'
+  PRETRAIN_PATH: '/home/zhangwucong/.cache/torch/checkpoints/resnet50-19c8e357.pth'
+  LOSS_TYPE: 'triplet+softmax+center'
+  LOSS_LABELSMOOTH: 'on'
+  COS_LAYER: False
+
+SOLVER:
+  OPTIMIZER: 'Adam'
+  BASE_LR: 0.00035
+  CE_LOSS_WEIGHT: 1.0
+  TRIPLET_LOSS_WEIGHT: 1.0
+  CENTER_LOSS_WEIGHT: 0.0005
+
+  HARD_FACTOR: 0.2
+
+  WEIGHT_DECAY: 0.0005
+  BIAS_LR_FACTOR: 1.0
+  WEIGHT_DECAY_BIAS: 0.0005
+  MOMENTUM: 0.9
+  CENTER_LR: 0.5
+  MARGIN: 0.3
+
+  STEPS: [40, 70, 130]
+  GAMMA: 0.1 
+  WARMUP_FACTOR: 0.01
+  WARMUP_EPOCHS: 10
+  WARMUP_METHOD: "linear"
+
+  LOG_PERIOD: 50
+  CHECKPOINT_PERIOD: 5
+  EVAL_PERIOD: 5
+  MAX_EPOCHS: 200
+
+TEST:
+  TEST_IMS_PER_BATCH: 128
+  FEAT_NORM: "yes"
+  TEST_WEIGHT: './output/Market1501/resnet50_185.pth'
+  DIST_MAT: "dist_mat.npy"
+  PIDS: "pids.npy"
+  CAMIDS: "camids.npy"
+  IMG_PATH: "imgpath.npy"
+  Q_FEATS: "qfeats.pth"  # query feats
+  G_FEATS: "gfeats.pth"  # gallery feats
+  TEST_METHOD: 'cosine'
+  FLIP_FEATS: 'off'  # using fliped feature for testing, option: 'on', 'off'
+  RERANKING: False  # re-ranking
+  QUERY_DIR: '/home/zhangwucong/pytorch_project/person-reid-tiny-baseline/data/Market-1501-v15.09.15/query/'  
+
