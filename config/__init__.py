@@ -1,3 +1,1 @@
-from .configs import Config
-
-__all__ = ['Config']
+from .defaults import _C as cfg

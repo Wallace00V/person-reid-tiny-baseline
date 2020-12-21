@@ -6,16 +6,16 @@ def make_optimizer(cfg, model, center_criterion):
     for key, value in model.named_parameters():
         if not value.requires_grad:
             continue
-        lr = cfg.BASE_LR
-        weight_decay = cfg.WEIGHT_DECAY
+        lr = cfg.SOLVER.BASE_LR
+        weight_decay = cfg.SOLVER.WEIGHT_DECAY
         if "bias" in key:
-            lr = cfg.BASE_LR * cfg.BIAS_LR_FACTOR
-            weight_decay = cfg.WEIGHT_DECAY_BIAS
+            lr = cfg.SOLVER.BASE_LR * cfg.SOLVER.BIAS_LR_FACTOR
+            weight_decay = cfg.SOLVER.WEIGHT_DECAY_BIAS
         params += [{"params": [value], "lr": lr, "weight_decay": weight_decay}]
-    if cfg.OPTIMIZER == 'SGD':
-        optimizer = getattr(torch.optim, cfg.OPTIMIZER)(params, momentum=cfg.MOMENTUM)
+    if cfg.SOLVER.OPTIMIZER == 'SGD':
+        optimizer = getattr(torch.optim, cfg.SOLVER.OPTIMIZER)(params, momentum=cfg.SOLVER.MOMENTUM)
     else:
-        optimizer = getattr(torch.optim, cfg.OPTIMIZER)(params)
-    optimizer_center = torch.optim.SGD(center_criterion.parameters(), lr=cfg.CENTER_LR)
+        optimizer = getattr(torch.optim, cfg.SOLVER.OPTIMIZER)(params)
+    optimizer_center = torch.optim.SGD(center_criterion.parameters(), lr=cfg.SOLVER.CENTER_LR)
 
     return optimizer, optimizer_center

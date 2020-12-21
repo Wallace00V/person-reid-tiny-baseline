@@ -31,11 +31,11 @@ def weights_init_classifier(m):
 class Backbone(nn.Module):
     def __init__(self, num_classes, cfg):
         super(Backbone, self).__init__()
-        last_stride = cfg.LAST_STRIDE
-        model_path = cfg.PRETRAIN_PATH
-        self.cos_layer = cfg.COS_LAYER
-        model_name = cfg.MODEL_NAME
-        pretrain_choice = cfg.PRETRAIN_CHOICE
+        last_stride = cfg.MODEL.LAST_STRIDE
+        model_path = cfg.MODEL.PRETRAIN_PATH
+        self.cos_layer = cfg.MODEL.COS_LAYER
+        model_name = cfg.MODEL.MODEL_NAME
+        pretrain_choice = cfg.MODEL.PRETRAIN_CHOICE
         if model_name == 'resnet50':
             self.in_planes = 2048
             self.base = ResNet(last_stride=last_stride,

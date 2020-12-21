@@ -19,12 +19,12 @@ def do_train(cfg,
              scheduler,
              loss_fn,
              num_query):
-    log_period = cfg.LOG_PERIOD
-    checkpoint_period = cfg.CHECKPOINT_PERIOD
-    eval_period = cfg.EVAL_PERIOD
+    log_period = cfg.SOLVER.LOG_PERIOD
+    checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
+    eval_period = cfg.SOLVER.EVAL_PERIOD
 
     device = "cuda"
-    epochs = cfg.MAX_EPOCHS
+    epochs = cfg.SOLVER.MAX_EPOCHS
 
     logger = logging.getLogger('{}.train'.format(cfg.PROJECT_NAME))
     logger.info('start training')
@@ -38,7 +38,7 @@ def do_train(cfg,
     loss_meter = AverageMeter()
     acc_meter = AverageMeter()
 
-    evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM)
+    evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM)
     # train
     for epoch in range(1, epochs + 1):
         start_time = time.time()
@@ -58,9 +58,9 @@ def do_train(cfg,
 
             loss.backward()
             optimizer.step()
-            if 'center' in cfg.LOSS_TYPE:
+            if 'center' in cfg.MODEL.LOSS_TYPE:
                 for param in center_criterion.parameters():
-                    param.grad.data *= (1. / cfg.CENTER_LOSS_WEIGHT)
+                    param.grad.data *= (1. / cfg.SOLVER.CENTER_LOSS_WEIGHT)
                 optimizer_center.step()
 
             acc = (score.max(1)[1] == target).float().mean()
@@ -77,11 +77,8 @@ def do_train(cfg,
         logger.info("Epoch {} done. Time per batch: {:.3f}[s] Speed: {:.1f}[samples/s]"
                     .format(epoch, time_per_batch, train_loader.batch_size / time_per_batch))
 
-        if not os.path.exists(cfg.OUTPUT_DIR):
-            os.mkdir(cfg.OUTPUT_DIR)
-
         if epoch % checkpoint_period == 0:
-            torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, cfg.MODEL_NAME + '_{}.pth'.format(epoch)))
+            torch.save(model.state_dict(), os.path.join(cfg.OUTPUT_DIR, cfg.MODEL.MODEL_NAME + '_{}.pth'.format(epoch)))
 
         if epoch % eval_period == 0:
             model.eval()
@@ -105,8 +102,8 @@ def do_inference(cfg,
     device = "cuda"
     logger = logging.getLogger('{}.test'.format(cfg.PROJECT_NAME))
     logger.info("Enter inferencing")
-    evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.FEAT_NORM, \
-                       method=cfg.TEST_METHOD, reranking=cfg.RERANKING)
+    evaluator = R1_mAP(num_query, max_rank=50, feat_norm=cfg.TEST.FEAT_NORM, \
+                       method=cfg.TEST.TEST_METHOD, reranking=cfg.TEST.RERANKING)
     evaluator.reset()
     if device:
         if torch.cuda.device_count() > 1:
@@ -120,7 +117,7 @@ def do_inference(cfg,
         with torch.no_grad():
             img = img.to(device)
 
-            if cfg.FLIP_FEATS == 'on':
+            if cfg.TEST.FLIP_FEATS == 'on':
                 feat = torch.FloatTensor(img.size(0), 2048).zero_().cuda()
                 for i in range(2):
                     if i == 1:
@@ -136,12 +133,12 @@ def do_inference(cfg,
 
     cmc, mAP, distmat, pids, camids, qfeats, gfeats = evaluator.compute()
 
-    np.save(os.path.join(cfg.LOG_DIR, cfg.DIST_MAT) , distmat)
-    np.save(os.path.join(cfg.LOG_DIR, cfg.PIDS), pids)
-    np.save(os.path.join(cfg.LOG_DIR, cfg.CAMIDS), camids)
-    np.save(os.path.join(cfg.LOG_DIR, cfg.IMG_PATH), img_path_list[num_query:])
-    torch.save(qfeats, os.path.join(cfg.LOG_DIR, cfg.Q_FEATS))
-    torch.save(gfeats, os.path.join(cfg.LOG_DIR, cfg.G_FEATS))
+    np.save(os.path.join(cfg.OUTPUT_DIR, cfg.TEST.DIST_MAT) , distmat)
+    np.save(os.path.join(cfg.OUTPUT_DIR, cfg.TEST.PIDS), pids)
+    np.save(os.path.join(cfg.OUTPUT_DIR, cfg.TEST.CAMIDS), camids)
+    np.save(os.path.join(cfg.OUTPUT_DIR, cfg.TEST.IMG_PATH), img_path_list[num_query:])
+    torch.save(qfeats, os.path.join(cfg.OUTPUT_DIR, cfg.TEST.Q_FEATS))
+    torch.save(gfeats, os.path.join(cfg.OUTPUT_DIR, cfg.TEST.G_FEATS))
 
     logger.info("Validation Results")
     logger.info("mAP: {:.1%}".format(mAP))

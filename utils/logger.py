@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-def setup_logger(name, save_dir):
+def setup_logger(name, save_dir, if_train):
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
 
@@ -13,7 +13,12 @@ def setup_logger(name, save_dir):
     logger.addHandler(ch)
 
     if save_dir:
-        fh = logging.FileHandler(os.path.join(save_dir, "log.txt"), mode='w')
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        if if_train==True:
+            fh = logging.FileHandler(os.path.join(save_dir, "train_log.txt"), mode='w')
+        else:
+            fh = logging.FileHandler(os.path.join(save_dir, "val_log.txt"), mode='w')
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         logger.addHandler(fh)

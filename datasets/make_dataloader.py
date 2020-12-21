@@ -25,7 +25,7 @@ def val_collate_fn(batch):
 
 def make_dataloader(cfg):
     train_transforms = T.Compose([
-        T.Resize(cfg.INPUT_SIZE),
+        T.Resize(cfg.DATA.INPUT_SIZE),
         T.RandomHorizontalFlip(p=0.5),
         T.Pad(10),
         T.RandomCrop([256, 128]),
@@ -39,29 +39,29 @@ def make_dataloader(cfg):
     ])
 
     val_transforms = T.Compose([
-        T.Resize(cfg.INPUT_SIZE),
+        T.Resize(cfg.DATA.INPUT_SIZE),
         T.ToTensor(),
         T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    num_workers = cfg.DATALOADER_NUM_WORKERS
-    dataset = Market1501(data_dir=cfg.DATA_DIR, verbose=True)
+    num_workers = cfg.DATA.DATALOADER_NUM_WORKERS
+    dataset = Market1501(data_dir=cfg.DATA.DATA_DIR, verbose=True)
     num_classes = dataset.num_train_pids
 
     train_set = ImageDataset(dataset.train, train_transforms)
 
-    if cfg.SAMPLER == 'triplet':
+    if cfg.DATA.SAMPLER == 'triplet':
         print('using triplet sampler')
         train_loader = DataLoader(train_set,
-                                  batch_size=cfg.BATCH_SIZE,
+                                  batch_size=cfg.DATA.BATCH_SIZE,
                                   num_workers=num_workers,
-                                  sampler=RandomIdentitySampler(dataset.train, cfg.BATCH_SIZE, cfg.NUM_IMG_PER_ID),
+                                  sampler=RandomIdentitySampler(dataset.train, cfg.DATA.BATCH_SIZE, cfg.DATA.NUM_IMG_PER_ID),
                                   collate_fn=train_collate_fn  # customized batch sampler
                                   )
-    elif cfg.SAMPLER == 'softmax':
+    elif cfg.DATA.SAMPLER == 'softmax':
         print('using softmax sampler')
         train_loader = DataLoader(train_set,
-                                  batch_size=cfg.BATCH_SIZE,
+                                  batch_size=cfg.DATA.BATCH_SIZE,
                                   shuffle=True,
                                   num_workers=num_workers,
                                   sampler=None,
@@ -69,11 +69,11 @@ def make_dataloader(cfg):
                                   drop_last=True
                                   )
     else:
-        print('unsupported sampler! expected softmax or triplet but got {}'.format(cfg.SAMPLER))
+        print('unsupported sampler! expected softmax or triplet but got {}'.format(cfg.DATA.SAMPLER))
 
     val_set = ImageDataset(dataset.query + dataset.gallery, val_transforms)
     val_loader = DataLoader(val_set,
-                            batch_size=cfg.TEST_IMS_PER_BATCH,
+                            batch_size=cfg.TEST.TEST_IMS_PER_BATCH,
                             shuffle=False, num_workers=num_workers,
                             collate_fn=val_collate_fn
                             )
